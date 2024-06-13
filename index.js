@@ -45,9 +45,15 @@ io.on("connection", (socket) => {
     const receiver = userData.get(message.receiverId); // receiver socket id
     const sender = userData.get(message.senderId); // sender socket id
 
+    socket.emit("confirm", message);
+
+    if (receiver) {
+      io.to(receiver).emit("live", message);
+    }
+
     const newMessage = new Message({
-      sender: message?.senderId,
-      receiver: message?.receiverId,
+      senderId: message?.senderId,
+      receiverId: message?.receiverId,
       message: message?.message,
     });
 
@@ -95,5 +101,6 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     userData.delete(userId);
+    socket.emit("online", false);
   });
 });
