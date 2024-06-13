@@ -81,13 +81,16 @@ io.on("connection", (socket) => {
 
     const findedConversion = await Conversion.find({
       parties: { $all: [senderId, receiverId] },
-    }).populate([
-      {
-        path: "message",
-      },
-    ]);
+    })
+      .populate([
+        {
+          path: "message",
+        },
+      ])
+      .select("message")
+      .sort({ _id: -1 });
 
-    socket.on("conversion", findedConversion);
+    socket.emit("conversion", findedConversion);
   });
 
   socket.on("disconnect", () => {
