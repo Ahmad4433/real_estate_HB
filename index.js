@@ -15,6 +15,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
+
+app.get('/',(req,res,next)=>{
+  res.send('server is running')
+})
+
 app.use("/listing", listingRoutes);
 app.use("/galary", galaryRoutes);
 app.use("/user", userRoutes);
