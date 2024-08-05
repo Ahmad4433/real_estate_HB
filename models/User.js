@@ -1,10 +1,15 @@
 const mongoose = require("mongoose");
+
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String },
-    email: { type: String },
-    password: { type: String },
-    conversion: { type: mongoose.Types.ObjectId, ref: "Conversion" },
+    // profile:{Type:String},
+    // name: { type: String },
+    // mobile: { type: Number },
+    // whats_app: { type: Number },
+    // email: { type: String },
+    data: { type: Object },
+    role: { type: String, default: "agent" },
+    listing: [{ type: mongoose.Types.ObjectId, ref: "Listing" }],
   },
   { timestamps: true }
 );

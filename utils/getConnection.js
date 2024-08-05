@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
-const getConnection = async () => {
+const getConnection = () => {
   try {
     mongoose
-      .connect(process.env.MONGO_URL)
+      .connect(process.env.MONGO_URI)
       .then((connection) => {
         console.log("db is connected");
       })
       .catch((error) => {
-        throw new Error(error);
+       console.log("faild to connect to db");
       });
   } catch (error) {
     console.log(error);

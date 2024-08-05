@@ -1,106 +1,31 @@
 const express = require("express");
-const cors = require("cors");
-const socket = require("socket.io");
-require("dotenv").config();
-const userRoutes = require("./routes/user");
 const getConnection = require("./utils/getConnection");
-const chatRoutes = require("./routes/chat");
-const authRoutes = require("./routes/auth");
-const Conversion = require("./models/Conversion");
-const Message = require("./models/Message");
-const User = require("./models/User");
+const errorHandler = require("./middlewares/errorHandler");
+require("dotenv").config();
+const listingRoutes = require("./routes/listings");
+const galaryRoutes = require("./routes/galary");
+const cors = require("cors");
+const userRoutes = require("./routes/user");
+const dropdownRoutes = require("./routes/dropdown");
+const amentyRoutes = require("./routes/amenty");
+const reviewRoutes = require("./routes/review");
+const branchRoutes = require("./routes/branch");
 const app = express();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
-getConnection();
-
+app.use("/listing", listingRoutes);
+app.use("/galary", galaryRoutes);
 app.use("/user", userRoutes);
-app.use("/chat/user", chatRoutes);
-app.use("/auth", authRoutes);
+app.use("/dropdown", dropdownRoutes);
+app.use("/amenty", amentyRoutes);
+app.use("/review", reviewRoutes);
+app.use("/branch", branchRoutes);
 
-app.use((error, req, res, next) => {
-  const statusCode = error.statusCode || 500;
-  const message = error.message || "internal server error";
-  res.status(statusCode).json({ message: message });
-});
+app.use(errorHandler);
 
-const server = app.listen(process.env.PORT, () =>
-  console.log(`server is listening on port: ${process.env.PORT}`)
+getConnection();
+app.listen(process.env.PORT || 5252, () =>
+  console.log(`server is listening on post:${process.env.PORT || 5252}`)
 );
-
-const io = socket(server, {
-  cors: {
-    origin: "*",
-  },
-});
-
-const userData = new Map();
-
-io.on("connection", (socket) => {
-  const userId = socket.handshake.query.userId;
-  userData.set(userId, socket.id);
-
-  socket.on("message", async (message) => {
-    const receiver = userData.get(message.receiverId); // receiver socket id
-    const sender = userData.get(message.senderId); // sender socket id
-
-    socket.emit("confirm", message);
-
-    if (receiver) {
-      io.to(receiver).emit("live", message);
-    }
-
-    const newMessage = new Message({
-      senderId: message?.senderId,
-      receiverId: message?.receiverId,
-      message: message?.message,
-    });
-
-    const savedMessage = await newMessage.save();
-
-    let findedConversion = await Conversion.findOne({
-      parties: { $all: [message?.senderId, message?.receiverId] },
-    });
-
-    if (!findedConversion) {
-      findedConversion = new Conversion({
-        message: [savedMessage._id],
-        parties: [message.receiverId, message.senderId],
-      });
-    } else {
-      findedConversion.message.push(savedMessage._id);
-    }
-    await findedConversion.save();
-  });
-
-  socket.on("onSelect", async (user) => {
-    const senderId = user.senderId;
-    const receiverId = user.receiverId;
-    const isOnline = userData.get(receiverId);
-
-    if (isOnline) {
-      socket.emit("online", true);
-    } else {
-      socket.emit("online", false);
-    }
-
-    const findedConversion = await Conversion.find({
-      parties: { $all: [senderId, receiverId] },
-    })
-      .populate([
-        {
-          path: "message",
-        },
-      ])
-      .select("message")
-      .sort({ _id: -1 });
-
-    socket.emit("conversion", findedConversion);
-  });
-
-  socket.on("disconnect", () => {
-    userData.delete(userId);
-    socket.emit("online", false);
-  });
-});
