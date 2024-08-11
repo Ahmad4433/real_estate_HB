@@ -11,6 +11,7 @@ const amentyRoutes = require("./routes/amenty");
 const reviewRoutes = require("./routes/review");
 const branchRoutes = require("./routes/branch");
 const app = express();
+
 app.use(
   cors({
     origin: "*",
@@ -18,8 +19,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true })); 
 
 app.get("/", (req, res, next) => {
   res.send("server is running");
