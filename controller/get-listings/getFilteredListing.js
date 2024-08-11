@@ -14,7 +14,7 @@ const getFilteredListing = async (req, res, next) => {
         .populate([
           {
             path: "user",
-            select: "data",
+            select: "data",    
           },
         ]);
     } else {
